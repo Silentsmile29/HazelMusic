@@ -73,7 +73,7 @@ def circle(pfp, size=(450, 450)):
     return pfp
 
 def welcomepic(pic, user, chat, id, uname):
-    background = Image.open("HazelMusic/assetswel12.PNG")
+    background = Image.open("HazelMusic/assets/wel12.PNG")
     pfp = Image.open(pic).convert("RGBA")
     pfp = circle(pfp)
     pfp = pfp.resize(
