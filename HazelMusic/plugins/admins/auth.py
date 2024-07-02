@@ -9,7 +9,7 @@ from HazelMusic.utils.database import (
     get_authuser_names,
     save_authuser,
 )
-from Hazelusic.utils.decorators import AdminActual, language
+from HazelMusic.utils.decorators import AdminActual, language
 from HazelMusic.utils.inline import close_markup
 from config import BANNED_USERS, adminlist
 
