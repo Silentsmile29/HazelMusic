@@ -52,22 +52,6 @@ random_photo = [
 
 LOGGER = getLogger(__name__)
 
-class WelDatabase:
-    def __init__(self):
-        self.data = {}
-
-    async def find_one(self, chat_id):
-        return chat_id in self.data
-
-    async def add_wlcm(self, chat_id):
-        if chat_id not in self.data:
-            self.data[chat_id] = {"state": "on"}  # Default state is "on"
-
-    async def rm_wlcm(self, chat_id):
-        if chat_id in self.data:
-            del self.data[chat_id]
-
-wlcm = WelDatabase()
 
 class temp:
     ME = None
@@ -77,11 +61,8 @@ class temp:
     U_NAME = None
     B_NAME = None
 
-
-
-def circle(pfp, size=(500, 500), brightness_factor=10):
+def circle(pfp, size=(450, 450)):
     pfp = pfp.resize(size, Image.ANTIALIAS).convert("RGBA")
-    pfp = ImageEnhance.Brightness(pfp).enhance(brightness_factor)
     bigsize = (pfp.size[0] * 3, pfp.size[1] * 3)
     mask = Image.new("L", bigsize, 0)
     draw = ImageDraw.Draw(mask)
@@ -91,44 +72,31 @@ def circle(pfp, size=(500, 500), brightness_factor=10):
     pfp.putalpha(mask)
     return pfp
 
-def welcomepic(pic, user, chatname, id, uname, brightness_factor=1.3):
-    background = Image.open("HazelMusic/assets/wel2.png")
+def welcomepic(pic, user, chat, id, uname):
+    background = Image.open("HazelMusic/assetswel12.PNG")
     pfp = Image.open(pic).convert("RGBA")
-    pfp = circle(pfp, brightness_factor=brightness_factor) 
-    pfp = pfp.resize((825, 824))
+    pfp = circle(pfp)
+    pfp = pfp.resize(
+        (605, 605)
+    ) 
     draw = ImageDraw.Draw(background)
-    font = ImageFont.truetype('HazelMusic/assets/font.ttf', size=110)
-    welcome_font = ImageFont.truetype('HazelMusic/assets/font.ttf', size=60)
-    draw.text((2100, 1420), f'ID: {id}', fill=(12000, 12000, 12000), font=font)
-    pfp_position = (1990, 435)
-    background.paste(pfp, pfp_position, pfp)
-    background.save(f"downloads/welcome#{id}.png")
+    font = ImageFont.truetype('HazelMusic/assets/font.ttf', size=75)
+    font2 = ImageFont.truetype('HazelMusic/assets/font.ttf', size=90)
+    draw.text((150, 450), f'NAME : {unidecode(user)}', fill="black", font=font)
+    draw.text((150, 550), f'ID : {id}', fill="black", font=font)
+    draw.text((150, 650), f"USERNAME : {uname}", fill="black",font=font)
+    pfp_position = (1077, 183)  
+    background.paste(pfp, pfp_position, pfp)  
+    background.save(
+        f"downloads/welcome#{id}.png"
+    )
     return f"downloads/welcome#{id}.png"
 
 
-@app.on_message(filters.command("awelcome") & ~filters.private)
+HUHU = """**
+@app.on_message(filters.command("swel") & ~filters.private)
 async def auto_state(_, message):
-    user_id = message.from_user.id
-    current_time = time()
-    # Update the last message timestamp for the user
-    last_message_time = user_last_message_time.get(user_id, 0)
-
-    if current_time - last_message_time < SPAM_WINDOW_SECONDS:
-        # If less than the spam window time has passed since the last message
-        user_last_message_time[user_id] = current_time
-        user_command_count[user_id] = user_command_count.get(user_id, 0) + 1
-        if user_command_count[user_id] > SPAM_THRESHOLD:
-            # Block the user if they exceed the threshold
-            hu = await message.reply_text(f"**{message.from_user.mention} ᴘʟᴇᴀsᴇ ᴅᴏɴᴛ ᴅᴏ sᴘᴀᴍ, ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴀғᴛᴇʀ 5 sᴇᴄ**")
-            await asyncio.sleep(3)
-            await hu.delete()
-            return 
-    else:
-        # If more than the spam window time has passed, reset the command count and update the message timestamp
-        user_command_count[user_id] = 1
-        user_last_message_time[user_id] = current_time
-
-    usage = "**ᴜsᴀɢᴇ:**\n**⦿ /awelcome [on|off]**"
+    usage = "**❖ ᴜsᴀɢᴇ ➥** /swel [ᴇɴᴀʙʟᴇ|ᴅɪsᴀʙʟᴇ]"
     if len(message.command) == 1:
         return await message.reply_text(usage)
     chat_id = message.chat.id
@@ -137,45 +105,81 @@ async def auto_state(_, message):
         enums.ChatMemberStatus.ADMINISTRATOR,
         enums.ChatMemberStatus.OWNER,
     ):
-        A = await wlcm.find_one(chat_id)
-        state = message.text.split(None, 1)[1].strip().lower()
-        if state == "off":
-            if A:
-                await message.reply_text("**ᴀssɪsᴛᴀɴᴛ ᴡᴇʟᴄᴏᴍᴇ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ ᴀʟʀᴇᴀᴅʏ ᴅɪsᴀʙʟᴇᴅ !**")
-            else:
-                await wlcm.add_wlcm(chat_id)
-                await message.reply_text(f"**ᴅɪsᴀʙʟᴇᴅ ᴡᴇʟᴄᴏᴍᴇ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ ɪɴ** {message.chat.title} ʙʏ ᴀssɪsᴛᴀɴᴛ")
-        elif state == "on":
-            if not A:
-                await message.reply_text("**ᴇɴᴀʙʟᴇᴅ ᴀssɪsᴛᴀɴᴛ ᴡᴇʟᴄᴏᴍᴇ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ.**")
-            else:
-                await wlcm.rm_wlcm(chat_id)
-                await message.reply_text(f"**ᴇɴᴀʙʟᴇᴅ ᴀssɪsᴛᴀɴᴛ ᴡᴇʟᴄᴏᴍᴇ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ ɪɴ ** {message.chat.title}")
-        else:
-            await message.reply_text(usage)
-    else:
-        await message.reply("**sᴏʀʀʏ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴇɴᴀʙʟᴇ ᴀssɪsᴛᴀɴᴛ ᴡᴇʟᴄᴏᴍᴇ ɴᴏᴛɪғɪᴄᴀᴛɪᴏɴ!**")
-
-
-
-@app.on_chat_member_updated(filters.group, group=-2)
-async def greet_new_members(_, member: ChatMemberUpdated):
-    try:
-        
-        chat_id = member.chat.id
-        userbot = await get_assistant(chat_id)
-        count = await app.get_chat_members_count(chat_id)
-        A = await wlcm.find_one(chat_id)
+      A = await wlcm.find_one({"chat_id" : chat_id})
+      state = message.text.split(None, 1)[1].strip()
+      state = state.lower()
+      if state == "enable":
         if A:
-            return
+           return await message.reply_text("✦ Special Welcome Already Enabled")
+        elif not A:
+           await add_wlcm(chat_id)
+           await message.reply_text(f"✦ Enabled Special Welcome in {message.chat.title}")
+      elif state == "disable":
+        if not A:
+           return await message.reply_text("✦ Special Welcome Already Disabled")
+        elif A:
+           await rm_wlcm(chat_id)
+           await message.reply_text(f"✦ Disabled Special Welcome in {message.chat.title}")
+      else:
+        await message.reply_text(usage)
+    else:
+        await message.reply("✦ Only Admins Can Use This Command")
+  **  """
+#bhag 
 
-        user = member.new_chat_member.user if member.new_chat_member else member.from_user
-        
-        # Add the modified condition here
-        if member.new_chat_member and not member.old_chat_member:
-            welcome_text = f"""**Wᴇʟᴄᴏᴍᴇ** {user.mention}\n**@{user.username}**"""
-            await asyncio.sleep(3) 
-            await userbot.send_message(chat_id, text=welcome_text)
+@app.on_chat_member_updated(filters.group, group=-3)
+async def greet_group(_, member: ChatMemberUpdated):
+    chat_id = member.chat.id
+   # A = await wlcm.find_one({"chat_id" : chat_id})
+   # if not A:
+  #     return
+    if (
+        not member.new_chat_member
+        or member.new_chat_member.status in {"banned", "left", "restricted"}
+        or member.old_chat_member
+    ):
+        return
+    user = member.new_chat_member.user if member.new_chat_member else member.from_user
+    try:
+        pic = await app.download_media(
+            user.photo.big_file_id, file_name=f"pp{user.id}.png"
+        )
+    except AttributeError:
+        pic = "HazelMusic/assets/upic.png"
+    if (temp.MELCOW).get(f"welcome-{member.chat.id}") is not None:
+        try:
+            await temp.MELCOW[f"welcome-{member.chat.id}"].delete()
+        except Exception as e:
+            LOGGER.error(e)
+    try:
+        welcomeimg = welcomepic(
+            pic, user.first_name, member.chat.title, user.id, user.username
+        )
+        temp.MELCOW[f"welcome-{member.chat.id}"] = await app.send_photo(
+            member.chat.id,
+            photo=welcomeimg,
+            caption= f"""
+ㅤㅤㅤ◦•●◉✿ ᴡᴇʟᴄᴏᴍᴇ ʙᴀʙʏ ✿◉●•◦
+▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰
+
+● ɴᴀᴍᴇ ➥  {user.mention}
+● ᴜsᴇʀɴᴀᴍᴇ ➥  @{user.username}
+● ᴜsᴇʀ ɪᴅ ➥  {user.id}
+
+❖ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ➥ 😈❦𝕤𝕚𝕃𝕖ℕ𝕥 𝕤𝕄𝕚𝕃𝕖❦😈
+▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰
+""",
+reply_markup=InlineKeyboardMarkup(
+[
+[InlineKeyboardButton(f"ᴀᴅᴅ ᴍᴇ ʙᴀʙʏ", url=f"https://t.me/Hazel_X_Music_Bot?startgroup=new"),
+]
+]
+))
+
     except Exception as e:
-       LOGGER.error(e)
-    
+        LOGGER.error(e)
+    try:
+        os.remove(f"downloads/welcome#{user.id}.png")
+        os.remove(f"downloads/pp{user.id}.png")
+    except Exception as e:
+        pass
